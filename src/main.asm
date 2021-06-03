@@ -6,7 +6,7 @@
 	global _start
 
 _start:	pop r8			; get the number of command-line arguments
-	cmp r8, 2
+	cmp r8, 2		; program path + the expression string
 	jne ERR_INVALID_NUMBER_OF_CL_ARGS
 
 	
