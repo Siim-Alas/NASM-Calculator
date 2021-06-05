@@ -28,6 +28,31 @@
 	; [...]
 	; 0x5E | ^
 
+	; parses a string of digits (0-9) into a floating-point number and
+	; stores the result in st0, pushing it to the top of the FPU stack
+	; parameters:
+	;  1. strend, a pointer to the last digit of the string (this will get
+	;     decremented!)
+	%macro parsefloat 1
+		parseint %1, rbx
+		push rbx
+		fild qword [rsp]
+
+		cmp byte [%1], "."	; note where parseint left %1
+		jne %%PARSEFLOAT_END
+
+		mov [rsp], rcx		; note where parseint left rcx
+		fidiv dword [rsp]
+
+		dec %1
+		parseint %1, rbx
+		mov [rsp], rbx
+		fiadd dword [rsp]
+
+		%%PARSEFLOAT_END:
+		pop rbx
+	%endmacro
+
 	; parses a string of digits (0-9) into an integer
 	; parameters:
 	;  1. strend, a pointer to the last digit of the string (this will get
@@ -38,21 +63,22 @@
 		mov rcx, 1
 		movzx eax, byte [%1]	; implicitly zeroes rax's upper half
 		sub rax, 0x30		; convert ASCII to int
-		.PARSEINT_LOOP:
+		%%PARSEINT_LOOP:
 			; rax already contains [%1] converted to int
 			mul rcx
 			add %2, rax
 
-			mov rax, 10
-			mul rcx
-			mov rcx, rax
+			; mov rax, 10
+			; mul rcx
+			; mov rcx, rax
+			imul rcx, 10
 
 			dec %1
 
 			movzx eax, byte [%1]
 			sub rax, 0x30
 			cmp rax, 0x0A
-			jb .PARSEINT_LOOP
+			jb %%PARSEINT_LOOP
 	%endmacro
 
 	; gets the length of a null-terminated string of length > 0 (excluding
@@ -62,10 +88,10 @@
 	;  2. len, the register to which the string's length will get written
 	%macro strlen 2
 		mov %2, %1
-		.STRLEN_LOOP:
+		%%STRLEN_LOOP:
 			inc %2
 			cmp byte [%2], 0
-			jne .STRLEN_LOOP
+			jne %%STRLEN_LOOP
 		sub %2, %1
 	%endmacro
 %endif
