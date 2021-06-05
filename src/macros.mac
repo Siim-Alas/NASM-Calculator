@@ -9,5 +9,43 @@
 	; file descriptors
 	%define STDOUT 1
 	%define STDERR 2
+
+	; writes a given string to STDOUT
+	; parameters:
+	;  1. str, a pointer to the start of the string
+	;  2. len, the length of the string
+	%macro write_to_stdout 2
+		mov rax, SYS_WRITE
+		mov rdi, STDOUT
+		mov rsi, %1
+		mov rdx, %2
+		syscall
+	%endmacro
+
+	; writes a given string to STDERR
+	; parameters:
+	;  1. str, a pointer to hte start of the string
+	;  2. len, the length of the string
+	%macro write_to_stderr 2
+		mov rax, SYS_WRITE
+		mov rdi, STDERR
+		mov rsi, %1
+		mov rdx, %2
+		syscall
+	%endmacro
+
+	; gets the length of a null-terminated string (excluding the null-
+	; terminator itself) of length > 0
+	; parameters:
+	;  1. str, a pointer to the start of the string
+	;  2. len, the register where the string's length will get written
+	%macro strlen 2
+		mov %2, %1
+		.STRLEN_LOOP_HEAD:
+			inc %2
+			cmp byte [%2], 0
+			jne .STRLEN_LOOP_HEAD
+		sub %2, %1
+	%endmacro
 %endif
 
