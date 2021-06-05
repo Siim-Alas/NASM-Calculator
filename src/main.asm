@@ -22,6 +22,7 @@ _start:	pop r8			; get the number of command-line arguments
 	%endif
 
 	add r8, r9
+	dec r8
 	parsefloat r8
 
 	mov rax, SYS_EXIT
