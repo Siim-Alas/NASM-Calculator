@@ -24,7 +24,7 @@
 
 	; writes a given string to STDERR
 	; parameters:
-	;  1. str, a pointer to hte start of the string
+	;  1. str, a pointer to the start of the string
 	;  2. len, the length of the string
 	%macro write_to_stderr 2
 		mov rax, SYS_WRITE
