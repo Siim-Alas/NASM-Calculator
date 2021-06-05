@@ -1,0 +1,19 @@
+
+%ifndef STRING_MACROS_MAC
+	%define STRING_MACROS_MAC
+
+	; gets the length of a null-terminated string of length > 0 (excluding
+	; the null-terminator)
+	; parameters:
+	;  1. str, a pointer to the start of the string
+	;  2. len, the register to which the string's length will get written
+	%macro strlen 2
+		mov %2, %1
+		.STRLEN_LOOP:
+			inc %2
+			cmp byte [%2], 0
+			jne .STRLEN_LOOP
+		sub %2, %1
+	%endmacro
+%endif
+

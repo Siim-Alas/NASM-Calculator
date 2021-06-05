@@ -1,6 +1,7 @@
 
 %define DEBUG
-%include "macros.mac"
+%include "io_macros.mac"
+%include "string_macros.mac"
 
 	section .text
 	global _start
