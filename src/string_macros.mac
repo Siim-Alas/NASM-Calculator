@@ -2,8 +2,61 @@
 %ifndef STRING_MACROS_MAC
 	%define STRING_MACROS_MAC
 
+	; pertinent ASCII reference table
+
+	; hex  | char
+	; -----|-----
+	; [...]
+	; 0x28 | (
+	; 0x29 | )
+	; 0x2A | *
+	; 0x2B | +
+	; 0x2C | ,
+	; 0x2D | -
+	; 0x2E | .
+	; 0x2F | /
+	; 0x30 | 0
+	; 0x31 | 1
+	; 0x32 | 2
+	; 0x33 | 3
+	; 0x34 | 4
+	; 0x35 | 5
+	; 0x36 | 6
+	; 0x37 | 7
+	; 0x38 | 8
+	; 0x39 | 9
+	; [...]
+	; 0x5E | ^
+
+	; parses a string of digits (0-9) into an integer
+	; parameters:
+	;  1. strend, a pointer to the last digit of the string (this will get
+	;     decremented!)
+	;  2. int, the register to which the parsed integer is saved
+	%macro parseint 2
+		mov %2, 0
+		mov rcx, 1
+		movzx eax, byte [%1]	; implicitly zeroes rax's upper half
+		sub rax, 0x30		; convert ASCII to int
+		.PARSEINT_LOOP:
+			; rax already contains [%1] converted to int
+			mul rcx
+			add %2, rax
+
+			mov rax, 10
+			mul rcx
+			mov rcx, rax
+
+			dec %1
+
+			movzx eax, byte [%1]
+			sub rax, 0x30
+			cmp rax, 0x0A
+			jb .PARSEINT_LOOP
+	%endmacro
+
 	; gets the length of a null-terminated string of length > 0 (excluding
-	; the null-terminator)
+	; the null-terminator in both cases)
 	; parameters:
 	;  1. str, a pointer to the start of the string
 	;  2. len, the register to which the string's length will get written
