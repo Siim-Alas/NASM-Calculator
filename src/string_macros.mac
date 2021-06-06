@@ -68,15 +68,12 @@
 			mul rcx
 			add %2, rax
 
-			; mov rax, 10
-			; mul rcx
-			; mov rcx, rax
 			imul rcx, 10
 
 			dec %1
-
 			movzx eax, byte [%1]
 			sub rax, 0x30
+
 			cmp rax, 0x0A
 			jb %%PARSEINT_LOOP
 	%endmacro
