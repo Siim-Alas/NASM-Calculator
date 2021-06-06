@@ -28,28 +28,37 @@
 	; [...]
 	; 0x5E | ^
 
-	; parses a string of digits (0-9) into a floating-point number and
-	; stores the result in st0, pushing it to the top of the FPU stack
+	; stores a string representation (in scientific notation) of the
+	; contents of st0
+	; parameters:
+	;  1. str, a pointer to the start of the string
+	%macro float_to_string 1
+		
+	%endmacro
+
+	; parses a string of digits (0-9 with decimal ".") into a floating-
+	; point number and stores the result in st0, pushing it to the top of
+	; the FPU stack
 	; parameters:
 	;  1. strend, a pointer to the last digit of the string (this will get
 	;     decremented!)
-	%macro parsefloat 1
-		parseint %1, rbx
+	%macro string_to_float 1
+		string_to_int %1, rbx
 		push rbx
 		fild qword [rsp]
 
 		cmp byte [%1], "."	; note where parseint left %1
-		jne %%PARSEFLOAT_END
+		jne %%STRING_TO_FLOAT_END
 
 		mov [rsp], rcx		; note where parseint left rcx
 		fidiv dword [rsp]
 
 		dec %1
-		parseint %1, rbx
+		string_to_int %1, rbx
 		mov [rsp], rbx
 		fiadd dword [rsp]
 
-		%%PARSEFLOAT_END:
+		%%STRING_TO_FLOAT_END:
 		pop rbx
 	%endmacro
 
@@ -58,12 +67,12 @@
 	;  1. strend, a pointer to the last digit of the string (this will get
 	;     decremented!)
 	;  2. int, the register to which the parsed integer is saved
-	%macro parseint 2
+	%macro string_to_int 2
 		mov %2, 0
 		mov rcx, 1
 		movzx eax, byte [%1]	; implicitly zeroes rax's upper half
 		sub rax, 0x30		; convert ASCII to int
-		%%PARSEINT_LOOP:
+		%%STRING_TO_INT_LOOP:
 			; rax already contains [%1] converted to int
 			mul rcx
 			add %2, rax
@@ -75,7 +84,7 @@
 			sub rax, 0x30
 
 			cmp rax, 0x0A
-			jb %%PARSEINT_LOOP
+			jb %%STRING_TO_INT_LOOP
 	%endmacro
 
 	; gets the length of a null-terminated string of length > 0 (excluding
