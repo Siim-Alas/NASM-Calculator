@@ -25,6 +25,14 @@ _start:	pop r8			; get the number of command-line arguments
 	dec r8
 	string_to_float r8
 
+	sub rsp, 26
+	float_to_string rsp
+
+	%ifdef DEBUG
+		write_to_stdout rsp, 26
+		write_to_stdout nl, 1
+	%endif
+
 	mov rax, SYS_EXIT
 	mov rdi, 0
 	syscall
