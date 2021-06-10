@@ -1,5 +1,6 @@
 
 %define DEBUG
+%include "config.mac"
 %include "io_macros.mac"
 %include "string_macros.mac"
 
@@ -25,11 +26,11 @@ _start:	pop r8			; get the number of command-line arguments
 	dec r8
 	string_to_float r8
 
-	sub rsp, 26
-	float_to_string rsp
+	mov rsi, outmsg
+	float_to_string rsi
 
 	%ifdef DEBUG
-		write_to_stdout rsp, 26
+		write_to_stdout outmsg, FLOAT_STRINGREP_LEN
 		write_to_stdout nl, 1
 	%endif
 
@@ -46,4 +47,8 @@ nl:	db 0x0A
 	%include "debug_messages.asm"
 %endif
 %include "error_messages.asm"
+
+
+	section .bss
+outmsg:	resb FLOAT_STRINGREP_LEN
 

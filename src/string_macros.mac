@@ -1,4 +1,6 @@
 
+%include "config.mac"
+
 %ifndef STRING_MACROS_MAC
 	%define STRING_MACROS_MAC
 
@@ -28,10 +30,13 @@
 	; [...]
 	; 0x5E | ^
 
+	%define FLOAT_STRINGREP_LEN 2 + SIGNIFICANT_FIGURES + 2 + 4
+
 	; creates a string representation (in scientific notation) of the
 	; contents of st0, popping it in the process
 	; parameters:
-	;  1. str, a pointer to the start of the string
+	;  1. str, a pointer to the start of the string (this will get left
+	;     pointing to one past the end of the string)
 	%macro float_to_string 1
 		fldlg2		; st0 = log10(2); st1 = val
 		fld st1		; st0 = val; st1 = log10(2); st2 = val
@@ -43,81 +48,145 @@
 		; st0 = log10(val); st1 = val
 
 		sub rsp, 8
+
 		fstcw word [rsp]
 		mov ax, word [rsp]
-		or ah, 0b00001100	; set rounding control to truncate
+		or ah, 0b00001100
+		and ah, 0b11110111	; set RC to round down (0b01)
 		mov word [rsp], ax
 		fldcw word [rsp]
 
-		frndint			; st0 = trunc(log10(val)); st1 = val
+		frndint			; st0 = floor(log10(val)); st1 = val
 		fist dword [rsp]	; exponent
-		mov rcx, qword [rsp]
+		movsx rcx, dword [rsp]
 
 		; to get the base-10 significand, we multiply the value by
 		; 10^-exponent, noting that 10^n = (2^log2(10))^n = 
 		; = 2^(log2(10) * n)
 
-		; for the significand to round to 19 digits, we further
-		; multiply by 10^18
+		; for the significand to round to the specified number of
+		; digits, we further multiply by 10^(SIGNIFICANT_FIGURES - 1),
+		; denoting the above exponent sfm1
 
-		mov qword [rsp], 18
+		mov qword [rsp], SIGNIFICANT_FIGURES - 1
 		fild qword [rsp]
-		; st0 = 18; st1 = trunc(log10(val)); st2 = val
+		; st0 = sfm1
+		; st1 = floor(log10(val))
+		; st2 = val
 		fsubrp st1
-		; st0 = 18 - trunc(log10(val)); st1 = val
+		; st0 = sfm1 - floor(log10(val))
+		; st1 = val
 		fldl2t
-		; st0 = log2(10); st1 = 18 - trunc(log10(val)); st2 = val
+		; st0 = log2(10)
+		; st1 = sfm1 - floor(log10(val))
+		; st2 = val
 		fmulp st1
-		; st0 = log2(10) * (18 - trunc(log10(val))); st1 = val
+		; st0 = log2(10) * (sfm1 - floor(log10(val)))
+		; st1 = val
 		fld st0
-		; st0 = st1 = log2(10) * (18 - trunc(log10(val))); st2 = val
+		; st0 = st1 = log2(10) * (sfm1 - floor(log10(val)))
+		; st2 = val
+
+		fstcw word [rsp]
+		mov ax, word [rsp]
+		or ah, 0b00001100	; set RC to truncate (0b11)
+		mov word [rsp], ax
+		fldcw word [rsp]
+
 		frndint
-		; st0 = trunc(log2(10) * (18 - trunc(log10(val))))
-		; st1 = log2(10) * (18 - trunc(log10(val)))
+		; st0 = trunc(log2(10) * (sfm1 - floor(log10(val))))
+		; st1 = log2(10) * (sfm1 - floor(log10(val)))
 		; st2 = val
 		fsubr st1
-		; st0 = log2(10) * (18 - trunc(log10(val))) - 
-		;		- trunc(log2(10) * (18 - trunc(log10(val))))
-		; st1 = log2(10) * (18 - trunc(log10(val)))
+		; st0 = log2(10) * (sfm1 - floor(log10(val))) - 
+		;		- trunc(log2(10) * (sfm1 - floor(log10(val))))
+		; st1 = log2(10) * (sfm1 - floor(log10(val)))
 		; st2 = val
 		f2xm1
-		; st0 = 2^(log2(10) * (18 - trunc(log10(val))) -
-		;	- trunc(log2(10) * (18 - trunc(log10(val))))) - 1
-		; st1 = log2(10) * (18 - trunc(log10(val)))
+		; st0 = 2^(log2(10) * (sfm1 - floor(log10(val))) -
+		;	- trunc(log2(10) * (sfm1 - floor(log10(val))))) - 1
+		; st1 = log2(10) * (sfm1 - floor(log10(val)))
 		; st2 = val
 		fld1
 		; st0 = 1
-		; st1 = 2^(log2(10) * (18 - trunc(log10(val))) -
-		;	- trunc(log2(10) * (18 - trunc(log10(val))))) - 1
-		; st2 = log2(10) * (18 - trunc(log10(val)))
+		; st1 = 2^(log2(10) * (sfm1 - floor(log10(val))) -
+		;	- trunc(log2(10) * (sfm1 - floor(log10(val))))) - 1
+		; st2 = log2(10) * (sfm1 - floor(log10(val)))
 		; st3 = val
 		faddp st1
-		; st0 = 2^(log2(10) * (18 - trunc(log10(val))) -
-		;		- trunc(log2(10) * (18 - trunc(log10(val)))))
-		; st1 = log2(10) * (18 - trunc(log10(val)))
+		; st0 = 2^(log2(10) * (sfm1 - floor(log10(val))) -
+		;		- trunc(log2(10) * (sfm1 - floor(log10(val)))))
+		; st1 = log2(10) * (sfm1 - floor(log10(val)))
 		; st2 = val
 		fmul st2
-		; st0 = val * 2^(log2(10) * (18 - trunc(log10(val))) -
-		;		- trunc(log2(10) * (18 - trunc(log10(val)))))
-		; st1 = log2(10) * (18 - trunc(log10(val))
+		; st0 = val * 2^(log2(10) * (sfm1 - floor(log10(val))) -
+		;		- trunc(log2(10) * (sfm1 - floor(log10(val)))))
+		; st1 = log2(10) * (sfm1 - floor(log10(val))
 		; st2 = val
 		fscale
-		; st0 = val * 10^(18 - trunc(log10(val)))
-		; st1 = log2(10) * (18 - trunc(log10(val)))
+		; st0 = val * 10^(sfm1 - floor(log10(val)))
+		; st1 = log2(10) * (sfm1 - floor(log10(val)))
 		; st2 = val
 
+		fstcw word [rsp]
+		mov ax, word [rsp]
+		and ah, 0b11110011	; set RC to nearest (0b00)
+		mov word [rsp], ax
+		fldcw word [rsp]
+
 		fistp qword [rsp]
-		; st0 = log2(10) * (18 - trunc(log10(val)))
+		; st0 = log2(10) * (sfm1 - floor(log10(val)))
 		; st1 = val
-		pop rdx
-		int_to_string %1, 19
+		pop rdx			; significand * 10^sfm1
+
+		cmp rdx, 0
+		jl %%FLOAT_TO_STRING_NEGATIVE
+
+		mov byte [%1], "+"
+		jmp %%FLOAT_TO_STRING_BOTH
+
+		%%FLOAT_TO_STRING_NEGATIVE:
+		mov byte [%1], "-"
+		neg rdx
+
+		%%FLOAT_TO_STRING_BOTH:
+		inc %1
+
+		%assign i 1
+		%rep SIGNIFICANT_FIGURES - 1
+			%assign i 10 * i
+		%endrep
+
+		mov rax, rdx
+		mov rdx, 0
+		mov rbx, i
+		div rbx
+
+		add rax, 0x30
+		mov [%1], rax
+		inc %1
+
+		mov byte [%1], "."
+		inc %1
+
+		%rep SIGNIFICANT_FIGURES - 1
+			%assign i i / 10
+
+			mov rax, rdx
+			mov rdx, 0
+			mov rbx, i
+			div rbx
+
+			add rax, 0x30
+			mov [%1], rax
+			inc %1
+		%endrep
 
 		mov byte [%1], "E"
 		inc %1
 
 		mov rdx, rcx
 		int_to_string %1, 4	; 15-bit exponent -> 2^15 = 3.2768*10^4
-		sub %1, 26
 	%endmacro
 
 	; creates a string representation with 1 + maxp10 characters (+/- and
