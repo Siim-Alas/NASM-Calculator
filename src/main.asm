@@ -13,26 +13,22 @@ _start:	pop r8			; get the number of command-line arguments
 
 	pop r8			; ignore the path to the executable
 	pop r8			; get a pointer to the start of the expression
-	strlen r8, r9		; get the length of the expression string
 
 	%ifdef DEBUG
+		strlen r8, r9	; get the length of the expression string
 		write_to_stdout debug_input_string_was_msg, \
 			debug_input_string_was_msg_len
 		write_to_stdout r8, r9
 		write_to_stdout nl, 1
 	%endif
 
-	add r8, r9
-	dec r8
 	string_to_float r8
 
 	mov rsi, outmsg
 	float_to_string rsi
 
-	%ifdef DEBUG
-		write_to_stdout outmsg, FLOAT_STRINGREP_LEN
-		write_to_stdout nl, 1
-	%endif
+	write_to_stdout outmsg, FLOAT_STRINGREP_LEN
+	write_to_stdout nl, 1
 
 	mov rax, SYS_EXIT
 	mov rdi, 0
@@ -42,8 +38,8 @@ _start:	pop r8			; get the number of command-line arguments
 
 
 	section .data
-%ifdef DEBUG
 nl:	db 0x0A
+%ifdef DEBUG
 	%include "debug_messages.asm"
 %endif
 %include "error_messages.asm"

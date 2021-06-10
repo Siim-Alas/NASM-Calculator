@@ -234,27 +234,50 @@
 	; point number and stores the result in st0, pushing it to the top of
 	; the FPU stack
 	; parameters:
-	;  1. strend, a pointer to the last digit of the string (this will get
-	;     decremented!)
+	;  1. str, a pointer to the first digit of the string (this will get
+	;     incremented!)
 	%macro string_to_float 1
-		string_to_int %1, rbx
+		mov rdi, %1
+		%%STRING_TO_FLOAT_L1:
+			inc %1
+			mov al, byte [%1]
+			sub al, 0x30
+			cmp al, 0x0A
+			jb %%STRING_TO_FLOAT_L1
+		mov rsi, %1
+
+		string_to_int rdi, rsi, rbx
 		push rbx
+		fild qword [rsp]	; st0 = integral part
+
+		cmp byte [%1], "."
+		jne %%STRING_TO_FLOAT_END
+
+		mov rdi, %1
+		inc rdi
+		%%STRING_TO_FLOAT_L2:
+			inc %1
+			mov al, byte [%1]
+			sub al, 0x30
+			cmp al, 0x0A
+			jb %%STRING_TO_FLOAT_L2
+
+		cmp rdi, %1
+		je %%STRING_TO_FLOAT_END
+
+		mov rsi, %1
+		string_to_int rdi, rsi, rbx
+
+		mov qword [rsp], rbx
 		fild qword [rsp]
+		; st0 = fractional part; st1 = integral part
 
-		cmp byte [%1], "."	; note where parseint left %1
-		jne %%STRING_TO_FLOAT_END
-
-		mov [rsp], rcx		; note where parseint left rcx
+		mov qword [rsp], rcx	; note where string_to_int left rcx
 		fidiv dword [rsp]
+		; st0 = fractional part / rcx; st1 = integral part
 
-		dec %1
-		string_to_int %1, rbx
-		mov [rsp], rbx
-		fiadd dword [rsp]
-
-		cmp byte [%1], "-"
-		jne %%STRING_TO_FLOAT_END
-		fchs
+		faddp st1
+		; st0 = val
 
 		%%STRING_TO_FLOAT_END:
 		add rsp, 8
@@ -262,27 +285,25 @@
 
 	; parses a string of digits (0-9) into an integer
 	; parameters:
-	;  1. strend, a pointer to the last digit of the string (this will get
-	;     decremented!)
-	;  2. int, the register to which the parsed integer is saved
-	%macro string_to_int 2
-		mov %2, 0
+	;  1. str, a pointer to the fisrst digit of the string
+	;  2. strendp1, a pointer to one past the last digit of the string
+	;     (this will get decremented!)
+	;  3. int, the register to which the parsed integer is saved
+	%macro string_to_int 3
+		mov %3, 0
 		mov rcx, 1
-		movzx eax, byte [%1]	; implicitly zeroes rax's upper half
-		sub rax, 0x30		; convert ASCII to int
+
 		%%STRING_TO_INT_LOOP:
-			; rax already contains [%1] converted to int
+			dec %2
+			movzx eax, byte [%2]	; implicitly zeroes the rest
+			sub rax, 0x30		; convert ASCII to int
 			mul rcx
-			add %2, rax
+			add %3, rax
 
 			imul rcx, 10
 
-			dec %1
-			movzx eax, byte [%1]
-			sub rax, 0x30
-
-			cmp rax, 0x0A
-			jb %%STRING_TO_INT_LOOP
+			cmp %2, %1
+			jne %%STRING_TO_INT_LOOP
 	%endmacro
 
 	; gets the length of a null-terminated string of length > 0 (excluding
