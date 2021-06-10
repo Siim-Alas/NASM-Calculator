@@ -33,7 +33,7 @@
 	%define FLOAT_STRINGREP_LEN 2 + SIGNIFICANT_FIGURES + 2 + 4
 
 	; creates a string representation (in scientific notation) of the
-	; contents of st0, popping it in the process
+	; contents of st0, leaving a value pushed before it on the FPU stack
 	; parameters:
 	;  1. str, a pointer to the start of the string (this will get left
 	;     pointing to one past the end of the string)
