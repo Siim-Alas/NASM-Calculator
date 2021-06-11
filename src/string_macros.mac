@@ -28,9 +28,41 @@
 	; 0x38 | 8
 	; 0x39 | 9
 	; [...]
-	; 0x5E | ^
 
 	%define FLOAT_STRINGREP_LEN 2 + SIGNIFICANT_FIGURES + 2 + 4
+
+	; finds the appropriate handler for a given character
+	; parameters:
+	;  1. char, a pointer to the character
+	;  2. ERR_UNRECOGNIZED_CHAR, the label for handling invalid characters
+	;  3. handle "(", a label
+	;  4. handle ")", a label
+	;  5. handle "*", a label
+	;  6. handle "+", a label
+	;  7. handle ",", a label
+	;  8. handle "-", a label
+	;  9. handle ".", a label
+	; 10. handle "/", a label
+	; 11. handle 0-9, a label
+	%macro find_handler 11
+		movzx rax, byte [%1]
+		sub rax, 0x28
+		cmp rax, 0x39 - 0x28
+		ja %2
+
+		imul rax, 5		; 64-bit jumps are 5 bytes
+		add rax, $ + 8
+		jmp rax
+		jmp near %3		; handle "("
+		jmp near %4		; handle ")"
+		jmp near %5		; handle "*"
+		jmp near %6		; handle "+"
+		jmp near %7		; handle ","
+		jmp near %8		; handle "-"
+		jmp near %9		; handle "."
+		jmp near %10		; handle "/"
+		times 10 jmp near %11	; handle 0-9
+	%endmacro
 
 	; creates a string representation (in scientific notation) of the
 	; contents of st0, leaving a value pushed before it on the FPU stack

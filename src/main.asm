@@ -22,6 +22,18 @@ _start:	pop r8			; get the number of command-line arguments
 		write_to_stdout nl, 1
 	%endif
 
+	find_handler r8, \
+		ERR_UNRECOGNIZED_CHARACTER, \
+		HANDLE_OPENPAREN, \
+		HANDLE_CLOSEPAREN, \
+		HANDLE_STAR, \
+		HANDLE_PLUS, \
+		HANDLE_COMMA, \
+		HANDLE_MINUS, \
+		HANDLE_DOT, \
+		HANDLE_SLASH, \
+		HANDLE_DIGIT
+
 	string_to_float r8
 
 	mov rsi, outmsg
@@ -34,6 +46,7 @@ _start:	pop r8			; get the number of command-line arguments
 	mov rdi, 0
 	syscall
 
+%include "character_handlers.asm"
 %include "error_handlers.asm"
 
 
