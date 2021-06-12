@@ -11,6 +11,9 @@ ERR_INVALID_NUMBER_OF_CL_ARGS:
 	syscall
 
 ERR_UNRECOGNIZED_CHARACTER:
+	cmp byte [r8], 0
+	je NORMAL_EXIT
+
 	write_to_stderr \
 		err_unrecognized_character_msg, \
 		err_unrecognized_character_msg_len

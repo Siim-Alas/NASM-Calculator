@@ -16,16 +16,19 @@ _start:	pop r8			; get the number of command-line arguments
 
 	%ifdef DEBUG
 		strlen r8, r9	; get the length of the expression string
-		write_to_stdout debug_input_string_was_msg, \
-			debug_input_string_was_msg_len
+		write_to_stdout \
+			debug_input_string_was_msg_beginning, \
+			debug_input_string_was_msg_beginning_len
 		write_to_stdout r8, r9
-		write_to_stdout nl, 1
+		write_to_stdout \
+			debug_input_string_was_msg_end, \
+			debug_input_string_was_msg_end_len
 	%endif
 
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	jmp rax
 
-	string_to_float r8
-
+NORMAL_EXIT:
 	mov rsi, outmsg
 	float_to_string rsi
 

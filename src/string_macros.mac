@@ -31,7 +31,8 @@
 
 	%define FLOAT_STRINGREP_LEN 2 + SIGNIFICANT_FIGURES + 2 + 4
 
-	; finds the appropriate handler for a given character
+	; finds the appropriate handler for a given character and stores its
+	; absolute address in rax
 	; parameters:
 	;  1. char, a pointer to the character
 	;  2. ERR_UNRECOGNIZED_CHAR, the label for handling invalid characters
@@ -52,7 +53,6 @@
 		ja %2
 
 		mov eax, [rax * 4 + %3]
-		jmp rax
 	%endmacro
 
 	; creates a string representation (in scientific notation) of the
@@ -263,7 +263,7 @@
 		mov rdi, %1
 		%%STRING_TO_FLOAT_L1:
 			inc %1
-			mov al, byte [%1]
+			mov al, [%1]
 			sub al, 0x30
 			cmp al, 0x0A
 			jb %%STRING_TO_FLOAT_L1
@@ -280,7 +280,7 @@
 		inc rdi
 		%%STRING_TO_FLOAT_L2:
 			inc %1
-			mov al, byte [%1]
+			mov al, [%1]
 			sub al, 0x30
 			cmp al, 0x0A
 			jb %%STRING_TO_FLOAT_L2

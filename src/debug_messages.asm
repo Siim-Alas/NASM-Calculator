@@ -39,13 +39,23 @@ db "DEBUG: Handling the character: '/'", 0x0A
 debug_handling_slash_msg_len: \
 equ $ - debug_handling_slash_msg
 
-debug_handling_digit_msg: \
-db "DEBUG: Handling a digit", 0x0A
-debug_handling_digit_msg_len: \
-equ $ - debug_handling_digit_msg
+debug_handling_the_digit_msg_beginning: \
+db "DEBUG: Handling the digit: '"
+debug_handling_the_digit_msg_beginning_len: \
+equ $ - debug_handling_the_digit_msg_beginning
 
-debug_input_string_was_msg: \
-db "DEBUG: The input string was: "
-debug_input_string_was_msg_len: \
-equ $ - debug_input_string_was_msg
+debug_handling_the_digit_msg_end: \
+db "'", 0x0A
+debug_handling_the_digit_msg_end_len: \
+equ $ - debug_handling_the_digit_msg_end
+
+debug_input_string_was_msg_beginning: \
+db "DEBUG: The input string was: '"
+debug_input_string_was_msg_beginning_len: \
+equ $ - debug_input_string_was_msg_beginning
+
+debug_input_string_was_msg_end: \
+db "'", 0x0A
+debug_input_string_was_msg_end_len: \
+equ $ - debug_input_string_was_msg_end
 
