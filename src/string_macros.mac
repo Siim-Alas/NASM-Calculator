@@ -50,7 +50,7 @@
 		sub rax, 0x28
 		cmp rax, 0x39 - 0x28
 		ja %2
-TEST:
+
 		mov eax, [rax * 4 + %3]
 		jmp rax
 	%endmacro
