@@ -13,7 +13,7 @@ HANDLE_CLOSEPAREN:
 			debug_handling_closeparen_msg, \
 			debug_handling_closeparen_msg_len
 	%endif
-HANDLE_STAR:
+HANDLE_ASTERISK:
 	%ifdef DEBUG
 		write_to_stdout \
 			debug_handling_star_msg, \
