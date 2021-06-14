@@ -11,6 +11,10 @@ HANDLE_OPENPAREN:
 
 	inc r8
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	call rax
+
+	; note that the previous instruction must leave r8 at the next char
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
 	jmp rax
 
 HANDLE_CLOSEPAREN:
@@ -26,36 +30,34 @@ HANDLE_CLOSEPAREN:
 HANDLE_ASTERISK:
 	%ifdef DEBUG
 		write_to_stdout \
-			debug_handling_star_msg, \
-			debug_handling_star_msg_len
-	%endif
-HANDLE_PLUS:
-	%ifdef DEBUG
-		write_to_stdout \
-			debug_handling_plus_msg, \
-			debug_handling_plus_msg_len
-	%endif
-HANDLE_COMMA:
-	%ifdef DEBUG
-		write_to_stdout \
-			debug_handling_comma_msg, \
-			debug_handling_comma_msg_len
+			debug_handling_asterisk_msg, \
+			debug_handling_asterisk_msg_len
 	%endif
 
-	jmp ERR_UNRECOGNIZED_CHARACTER
+	inc r8
+	cmp byte [r8], "("
+	je HANDLE_ASTERISK_FOLLOWED_BY_OPENPAREN
 
-HANDLE_MINUS:
-	%ifdef DEBUG
-		write_to_stdout \
-			debug_handling_minus_msg, \
-			debug_handling_minus_msg_len
-	%endif
-HANDLE_DOT:
-	%ifdef DEBUG
-		write_to_stdout \
-			debug_handling_dot_msg, \
-			debug_handling_dot_msg_len
-	%endif
+	mov al, [r8]
+	sub al, 0x30		; ASCII to int
+	cmp al, 0x09
+	ja ERR_ASTERISK_NOT_FOLLOWED_BY_DIGIT_OR_OPENPAREN
+
+	string_to_float r8	; st0 = right; st1 = left
+	jmp HANDLE_ASTERISK_END
+
+	HANDLE_ASTERISK_FOLLOWED_BY_OPENPAREN:
+	inc r8
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	call rax		; st0 = right; st1 = left
+
+	HANDLE_ASTERISK_END:
+	fmulp st1		; st0 = left * right
+
+	; note that the previous instructions must leave r8 at the next char
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	jmp rax
+
 HANDLE_SLASH:
 	%ifdef DEBUG
 		write_to_stdout \
@@ -64,14 +66,65 @@ HANDLE_SLASH:
 	%endif
 
 	inc r8
+	cmp byte [r8], "("
+	je HANDLE_SLASH_FOLLOWED_BY_OPENPAREN
+
+	mov al, [r8]
+	sub al, 0x30		; ASCII to int
+	cmp al, 0x09
+	ja ERR_SLASH_NOT_FOLLOWED_BY_DIGIT_OR_OPENPAREN
+
+	string_to_float r8	; st0 = divisor; st1 = dividend
+	jmp HANDLE_SLASH_END
+
+	HANDLE_SLASH_FOLLOWED_BY_OPENPAREN:
+	inc r8
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
 	call rax		; st0 = divisor; st1 = dividend
 
+	HANDLE_SLASH_END:
 	fdivp st1		; st0 = dividend / divisor
 
 	; note that the previous instructions must leave r8 at the next char
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
 	jmp rax
+
+HANDLE_PLUS:
+	%ifdef DEBUG
+		write_to_stdout \
+			debug_handling_plus_msg, \
+			debug_handling_plus_msg_len
+	%endif
+
+	inc r8
+	string_to_float r8	; st0 = right; st1 = left
+	faddp st1		; st0 = left + right
+
+	; note that string_to_float left r8 at the next char
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	jmp rax
+
+HANDLE_MINUS:
+	%ifdef DEBUG
+		write_to_stdout \
+			debug_handling_minus_msg, \
+			debug_handling_minus_msg_len
+	%endif
+
+	inc r8
+	string_to_float r8	; st0 = right; st1 = left
+	fsubp st1		; st0 = left - right
+
+	; note that string_to_float left r8 at the next char
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	jmp rax
+
+HANDLE_DOT:
+	%ifdef DEBUG
+		write_to_stdout \
+			debug_handling_dot_msg, \
+			debug_handling_dot_msg_len
+	%endif
 
 HANDLE_DIGIT:
 	%ifdef DEBUG

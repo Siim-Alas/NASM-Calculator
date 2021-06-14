@@ -9,20 +9,15 @@ db "DEBUG: Handling the character: ')'", 0x0A
 debug_handling_closeparen_msg_len: \
 equ $ - debug_handling_closeparen_msg
 
-debug_handling_star_msg: \
+debug_handling_asterisk_msg: \
 db "DEBUG: Handling the character: '*'", 0x0A
-debug_handling_star_msg_len: \
-equ $ - debug_handling_star_msg
+debug_handling_asterisk_msg_len: \
+equ $ - debug_handling_asterisk_msg
 
 debug_handling_plus_msg: \
 db "DEBUG: Handling the character: '+'", 0x0A
 debug_handling_plus_msg_len: \
 equ $ - debug_handling_plus_msg
-
-debug_handling_comma_msg: \
-db "DEBUG: Handling the character: ','", 0x0A
-debug_handling_comma_msg_len: \
-equ $ - debug_handling_comma_msg
 
 debug_handling_minus_msg: \
 db "DEBUG: Handling the character: '-'", 0x0A
