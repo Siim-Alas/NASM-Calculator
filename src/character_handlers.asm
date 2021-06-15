@@ -58,37 +58,6 @@ HANDLE_ASTERISK:
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
 	jmp rax
 
-HANDLE_SLASH:
-	%ifdef DEBUG
-		write_to_stdout \
-			debug_handling_slash_msg, \
-			debug_handling_slash_msg_len
-	%endif
-
-	inc r8
-	cmp byte [r8], "("
-	je HANDLE_SLASH_FOLLOWED_BY_OPENPAREN
-
-	mov al, [r8]
-	sub al, 0x30		; ASCII to int
-	cmp al, 0x09
-	ja ERR_SLASH_NOT_FOLLOWED_BY_DIGIT_OR_OPENPAREN
-
-	string_to_float r8	; st0 = divisor; st1 = dividend
-	jmp HANDLE_SLASH_END
-
-	HANDLE_SLASH_FOLLOWED_BY_OPENPAREN:
-	inc r8
-	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	call rax		; st0 = divisor; st1 = dividend
-
-	HANDLE_SLASH_END:
-	fdivp st1		; st0 = dividend / divisor
-
-	; note that the previous instructions must leave r8 at the next char
-	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	jmp rax
-
 HANDLE_PLUS:
 	%ifdef DEBUG
 		write_to_stdout \
@@ -128,6 +97,37 @@ HANDLE_MINUS:
 
 	fsubrp st1		; st0 = left - right
 	ret
+
+HANDLE_SLASH:
+	%ifdef DEBUG
+		write_to_stdout \
+			debug_handling_slash_msg, \
+			debug_handling_slash_msg_len
+	%endif
+
+	inc r8
+	cmp byte [r8], "("
+	je HANDLE_SLASH_FOLLOWED_BY_OPENPAREN
+
+	mov al, [r8]
+	sub al, 0x30		; ASCII to int
+	cmp al, 0x09
+	ja ERR_SLASH_NOT_FOLLOWED_BY_DIGIT_OR_OPENPAREN
+
+	string_to_float r8	; st0 = divisor; st1 = dividend
+	jmp HANDLE_SLASH_END
+
+	HANDLE_SLASH_FOLLOWED_BY_OPENPAREN:
+	inc r8
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	call rax		; st0 = divisor; st1 = dividend
+
+	HANDLE_SLASH_END:
+	fdivp st1		; st0 = dividend / divisor
+
+	; note that the previous instructions must leave r8 at the next char
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	jmp rax
 
 HANDLE_DIGIT:
 	%ifdef DEBUG
