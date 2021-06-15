@@ -9,10 +9,25 @@ db "ERROR: Invalid number of command-line arguments.", 0x0A
 err_invalid_number_of_cl_args_msg_len: \
 equ $ - err_invalid_number_of_cl_args_msg
 
+err_minus_not_followed_by_digit_or_openparen_msg: \
+db "ERROR: A '-' was not followed by a digit (0-9) or '('.", 0x0A
+err_minus_not_followed_by_digit_or_openparen_msg_len: \
+equ $ - err_minus_not_followed_by_digit_or_openparen_msg
+
+err_misplaced_dot_msg: \
+db "ERROR: A '.' was found somewhere else than between two digits (0-9).", 0x0A
+err_misplaced_dot_msg_len: \
+equ $ - err_misplaced_dot_msg
+
 err_slash_not_followed_by_digit_or_openparen_msg: \
 db "ERROR: A '/' was not followed by a digit (0-9) or '('.", 0x0A
 err_slash_not_followed_by_digit_or_openparen_msg_len: \
 equ $ - err_slash_not_followed_by_digit_or_openparen_msg
+
+err_too_many_closeparens_msg: \
+db "ERROR: The number of ')'-s exceeded the number of '('-s.", 0x0A
+err_too_many_closeparens_msg_len: \
+equ $ - err_too_many_closeparens_msg
 
 err_unrecognized_character_msg: \
 db "ERROR: Unrecognized character.", 0x0A

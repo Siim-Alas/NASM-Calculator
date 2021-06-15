@@ -96,13 +96,18 @@ HANDLE_PLUS:
 			debug_handling_plus_msg_len
 	%endif
 
-	inc r8
-	string_to_float r8	; st0 = right; st1 = left
-	faddp st1		; st0 = left + right
+	sub rsp, 10
+	fstp tword [rsp]	; pops left
 
-	; note that string_to_float left r8 at the next char
+	inc r8
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	jmp rax
+	call rax		; st0 = right
+
+	fld tword [rsp]		; st0 = left; st1 = right
+	add rsp, 10
+
+	faddp st1		; st0 = left + right
+	ret
 
 HANDLE_MINUS:
 	%ifdef DEBUG
@@ -111,20 +116,18 @@ HANDLE_MINUS:
 			debug_handling_minus_msg_len
 	%endif
 
+	sub rsp, 10
+	fstp tword [rsp]	; pops left
+
 	inc r8
-	string_to_float r8	; st0 = right; st1 = left
-	fsubp st1		; st0 = left - right
-
-	; note that string_to_float left r8 at the next char
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	jmp rax
+	call rax		; st0 = right
 
-HANDLE_DOT:
-	%ifdef DEBUG
-		write_to_stdout \
-			debug_handling_dot_msg, \
-			debug_handling_dot_msg_len
-	%endif
+	fld tword [rsp]		; st0 = left; st1 = right
+	add rsp, 10
+
+	fsubrp st1		; st0 = left - right
+	ret
 
 HANDLE_DIGIT:
 	%ifdef DEBUG

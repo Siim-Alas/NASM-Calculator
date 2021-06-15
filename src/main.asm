@@ -25,8 +25,10 @@ _start:	pop r8			; get the number of command-line arguments
 			debug_input_string_was_msg_end_len
 	%endif
 
+	push ERR_TOO_MANY_CLOSEPARENS	; prevent returning to random memory
+
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	jmp rax
+	call rax
 
 NORMAL_EXIT:
 	mov rsi, outmsg
@@ -37,6 +39,11 @@ NORMAL_EXIT:
 
 	mov rax, SYS_EXIT
 	mov rdi, 0
+	syscall
+
+ERROR_EXIT:
+	mov rax, SYS_EXIT
+	mov rdi, 1
 	syscall
 
 %include "character_handlers.asm"
@@ -52,7 +59,7 @@ char_handler_jmp_table: dd \
 	HANDLE_PLUS, \
 	ERR_UNRECOGNIZED_CHARACTER, \
 	HANDLE_MINUS, \
-	HANDLE_DOT, \
+	ERR_MISPLACED_DOT, \
 	HANDLE_SLASH
 	times 10 dd HANDLE_DIGIT
 %ifdef DEBUG
