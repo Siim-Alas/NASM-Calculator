@@ -9,7 +9,7 @@ The only supported operators are
 
 * `(` and `)`, [parentheses](https://en.wikipedia.org/wiki/Bracket_(mathematics))
 * `+`, [addition](https://en.wikipedia.org/wiki/Addition)
-* `-`, [subtraction](https://en.wikipedia.org/wiki/Subtracion)
+* `-`, [subtraction](https://en.wikipedia.org/wiki/Subtraction)
 * `*`, [multiplication](https://en.wikipedia.org/wiki/Multiplication)
 * `/`, [division](https://en.wikipedia.org/wiki/Division_(mathematics))
 
