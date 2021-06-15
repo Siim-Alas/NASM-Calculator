@@ -70,12 +70,12 @@ HANDLE_PLUS:
 
 	inc r8
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	call rax		; st0 = right
+	call rax		; st0 = right + ...
 
-	fld tword [rsp]		; st0 = left; st1 = right
+	fld tword [rsp]		; st0 = left; st1 = right + ...
 	add rsp, 10
 
-	faddp st1		; st0 = left + right
+	faddp st1		; st0 = left + right + ...
 	ret
 
 HANDLE_MINUS:
@@ -89,13 +89,33 @@ HANDLE_MINUS:
 	fstp tword [rsp]	; pops left
 
 	inc r8
-	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
-	call rax		; st0 = right
+	cmp byte [r8], "("
+	je HANDLE_MINUS_FOLLOWED_BY_OPENPAREN
 
-	fld tword [rsp]		; st0 = left; st1 = right
+	mov al, [r8]
+	sub al, 0x30		; ASCII to int
+	cmp al, 0x09
+	ja ERR_MINUS_NOT_FOLLOWED_BY_DIGIT_OR_OPENPAREN
+
+	string_to_float r8	; st0 = right?
+	jmp HANDLE_MINUS_END
+
+	HANDLE_MINUS_FOLLOWED_BY_OPENPAREN:
+	inc r8
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	call rax		; st0 = right?
+
+	HANDLE_MINUS_END:
+	fchs			; st0 = - right?
+
+	; note that the previous instructions must leave r8 at the next char
+	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
+	call rax		; st0 = - right + ...
+
+	fld tword [rsp]		; st0 = left; st1 = - right + ...
 	add rsp, 10
 
-	fsubrp st1		; st0 = left - right
+	faddp st1		; st0 = left - right + ...
 	ret
 
 HANDLE_SLASH:

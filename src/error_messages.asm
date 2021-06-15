@@ -24,11 +24,6 @@ db "ERROR: A '/' was not followed by a digit (0-9) or '('.", 0x0A
 err_slash_not_followed_by_digit_or_openparen_msg_len: \
 equ $ - err_slash_not_followed_by_digit_or_openparen_msg
 
-err_too_many_closeparens_msg: \
-db "ERROR: The number of ')'-s exceeded the number of '('-s.", 0x0A
-err_too_many_closeparens_msg_len: \
-equ $ - err_too_many_closeparens_msg
-
 err_unrecognized_character_msg: \
 db "ERROR: Unrecognized character.", 0x0A
 err_unrecognized_character_msg_len: \

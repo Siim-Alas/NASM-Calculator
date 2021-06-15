@@ -24,8 +24,6 @@ _start:	pop r8			; get the number of command-line arguments
 			debug_input_string_was_msg_end_len
 	%endif
 
-	push ERR_TOO_MANY_CLOSEPARENS	; prevent returning to random memory
-
 	find_handler r8, ERR_UNRECOGNIZED_CHARACTER, char_handler_jmp_table
 	call rax
 

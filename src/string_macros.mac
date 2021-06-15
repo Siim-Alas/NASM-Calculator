@@ -50,9 +50,15 @@
 		movzx rax, byte [%1]
 		sub rax, 0x28
 		cmp rax, 0x39 - 0x28
-		ja %2
+		ja %%FIND_HANDLER_UNRECOGNIZED_CHARACTER
 
 		mov eax, [rax * 4 + %3]
+		jmp %%FIND_HANDLER_END
+
+		%%FIND_HANDLER_UNRECOGNIZED_CHARACTER:
+		mov eax, %2
+
+		%%FIND_HANDLER_END:
 	%endmacro
 
 	; creates a string representation (in scientific notation) of the
