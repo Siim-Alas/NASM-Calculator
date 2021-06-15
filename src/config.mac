@@ -2,7 +2,7 @@
 %ifndef CONFIG_MAC
 	%define CONFIG_MAC
 
-	%define DEBUG
+	; %define DEBUG
 	%define SIGNIFICANT_FIGURES 5
 %endif
 
