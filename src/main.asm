@@ -1,5 +1,4 @@
 
-%define DEBUG
 %include "config.mac"
 %include "io_macros.mac"
 %include "string_macros.mac"
